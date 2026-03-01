@@ -5,10 +5,51 @@ async function loadComponents() {
     // 0. Prevent scrolling while loading
     document.body.style.overflow = 'hidden';
 
-    // 1. Check version immediately to decide if cache needs flushing
+    const progressBar = document.getElementById('loader-progress');
+    const phraseEl = document.getElementById('loader-phrase');
+    
+    // Initial Fallback phrases
+    let phrases = [
+        "Defining your brand...",
+        "Curating the collection...",
+        "Polishing the presence..."
+    ];
+
+    let phraseInterval;
+    function startPhrases() {
+        if (!phraseEl) return;
+        phraseEl.textContent = phrases[Math.floor(Math.random() * phrases.length)];
+        phraseInterval = setInterval(() => {
+            phraseEl.style.opacity = 0;
+            setTimeout(() => {
+                phraseEl.textContent = phrases[Math.floor(Math.random() * phrases.length)];
+                phraseEl.style.opacity = 0.8;
+            }, 500);
+        }, 2500);
+    }
+
+    function updateProgress(percent) {
+        if (progressBar) progressBar.style.width = percent + '%';
+    }
+
+    // Initial state
+    updateProgress(10);
+
+    // 1. Check version and start fetching master data immediately
     if (typeof Data !== 'undefined') {
+        const masterData = await Data.loadMasterData();
+        if (masterData && masterData.config) {
+            const phrasesConfig = masterData.config.find(item => item.key === 'LOADER_PHRASES');
+            if (phrasesConfig && phrasesConfig.value) {
+                phrases = phrasesConfig.value.split('|').map(p => p.trim());
+            }
+        }
         await Data.checkVersion();
     }
+    
+    // Start showing phrases after master data (and potentially custom phrases) are ready
+    startPhrases();
+    updateProgress(20);
 
     // Recursive Loader function
     async function processComponents() {
@@ -19,7 +60,6 @@ async function loadComponents() {
             const componentName = element.getAttribute('data-component');
             if (componentName === 'loader') return;
 
-            // Mark as loaded immediately to prevent infinite loops
             element.setAttribute('data-loaded', 'true');
 
             try {
@@ -27,8 +67,6 @@ async function loadComponents() {
                 if (!response.ok) throw new Error(`Status ${response.status}`);
                 const html = await response.text();
                 element.innerHTML = html;
-                
-                // After injecting, check if there are nested components inside this one
                 await processComponents(); 
             } catch (error) {
                 console.warn(`[Loader] Failed to load component: ${componentName} (${error.message})`);
@@ -40,6 +78,7 @@ async function loadComponents() {
     }
 
     await processComponents();
+    updateProgress(40);
 
     // 2. Dynamic Feature Loading
     const features = [];
@@ -66,6 +105,7 @@ async function loadComponents() {
     });
 
     await Promise.all(featurePromises);
+    updateProgress(60);
     
     // 3. Load and apply site-wide configuration
     const configArray = await Data.fetch('config');
@@ -77,7 +117,6 @@ async function loadComponents() {
         });
         Utils.applyConfig(config);
 
-        // 3b. Inject Google Analytics
         if (config['GOOGLE_ANALYTICS_ID']) {
             const gaId = config['GOOGLE_ANALYTICS_ID'];
             const gaScript = document.createElement('script');
@@ -95,6 +134,7 @@ async function loadComponents() {
             document.head.appendChild(gaInitScript);
         }
     }
+    updateProgress(75);
 
     // 4. Initialize UI interactions
     if (typeof App !== 'undefined') {
@@ -104,26 +144,61 @@ async function loadComponents() {
     // 5. Signal ready
     document.dispatchEvent(new CustomEvent('appReady'));
 
-    // 5b. Wait for critical hero images to ensure visual stability
-    const criticalImages = [];
-    const firstHero = document.querySelector('[style-bg-config-key="HERO_IMAGE_1"]');
-    if (firstHero) {
-        const bgUrl = window.getComputedStyle(firstHero).backgroundImage.slice(5, -2);
-        if (bgUrl && bgUrl !== 'ne' && bgUrl !== 'non') {
-            criticalImages.push(new Promise(resolve => {
-                const img = new Image();
-                img.src = bgUrl;
-                img.onload = resolve;
-                img.onerror = resolve;
-                // Timeout after 2 seconds to not keep user waiting forever if image is slow
-                setTimeout(resolve, 2000);
-            }));
-        }
+    // 5b. Wait for critical hero images
+    const criticalElements = document.querySelectorAll('[style-bg-config-key]');
+    let loadedCount = 0;
+    const totalToLoad = criticalElements.length;
+
+    const imagePromises = Array.from(criticalElements).map(el => {
+        return new Promise(resolve => {
+            const style = window.getComputedStyle(el);
+            const bg = style.backgroundImage;
+            let loaded = false;
+            
+            const handleLoad = () => {
+                if (loaded) return;
+                loaded = true;
+                loadedCount++;
+                const progressBonus = totalToLoad > 0 ? (loadedCount / totalToLoad) * 20 : 20;
+                updateProgress(75 + progressBonus);
+                resolve();
+            };
+
+            if (!bg || bg === 'none') {
+                setTimeout(() => {
+                    const retryBg = window.getComputedStyle(el).backgroundImage;
+                    if (retryBg && retryBg !== 'none') {
+                        const url = retryBg.slice(5, -2).replace(/"/g, "");
+                        preloadImage(url, handleLoad);
+                    } else {
+                        handleLoad();
+                    }
+                }, 150);
+            } else {
+                const url = bg.slice(5, -2).replace(/"/g, "");
+                preloadImage(url, handleLoad);
+            }
+        });
+    });
+
+    function preloadImage(url, callback) {
+        if (!url || url.length < 5) return callback();
+        const img = new Image();
+        img.onload = callback;
+        img.onerror = callback;
+        img.src = url;
+        setTimeout(callback, 2500);
     }
-    await Promise.all(criticalImages);
+
+    if (imagePromises.length > 0) {
+        await Promise.all(imagePromises);
+    }
+    
+    updateProgress(100);
 
     // 6. Hide loader
     setTimeout(() => {
+        if (phraseInterval) clearInterval(phraseInterval);
         const loader = document.getElementById('site-loader');
         if (loader) {
             loader.classList.add('fade-out');
@@ -131,7 +206,7 @@ async function loadComponents() {
                 document.body.style.overflow = '';
             }, 800);
         }
-    }, 200);
+    }, 400); 
 }
 
 document.addEventListener('DOMContentLoaded', loadComponents);

@@ -4,8 +4,8 @@
 PORT=8000
 SERVER_URL="http://localhost:$PORT"
 
-echo "🚀 Starting test server on port $PORT..."
-python3 -m http.server $PORT > /dev/null 2>&1 &
+echo "🚀 Starting dev server on port $PORT..."
+python3 scripts/dev_server.py > /dev/null 2>&1 &
 SERVER_PID=$!
 
 sleep 2
@@ -33,6 +33,8 @@ test_endpoint ""
 test_endpoint "index"
 test_endpoint "services"
 test_endpoint "meet-the-team"
+test_endpoint "icon-service"
+test_endpoint "reviews"
 test_endpoint "styles/styles.css"
 
 echo "--- Data & Scripts ---"
