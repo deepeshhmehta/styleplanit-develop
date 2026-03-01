@@ -289,6 +289,12 @@ footer {
 
 .social-icons a:hover { color: var(--black); }
 
+.footer-copyright {
+    font-size: 0.7rem;
+    color: #999;
+    margin-top: 30px;
+}
+
 /* Site Loader Base */
 .loader-overlay {
     position: fixed;
