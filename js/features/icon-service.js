@@ -11,7 +11,7 @@ const IconServiceFeature = {
         const configArray = await Data.fetch('config');
         const config = {};
         configArray.forEach(item => config[item.key] = item.value);
-        this.renderAuthGate(container, config);
+        this.renderGate(container, config);
         return;
     }
 
@@ -24,7 +24,7 @@ const IconServiceFeature = {
         </section>
     `);
     
-    // Refresh master data specifically here since auth state might have changed data access needs
+    // Refresh master data specifically here since access state might have changed data access needs
     const configArray = await Data.fetch('config');
     const config = {};
     configArray.forEach(item => config[item.key] = item.value);
@@ -35,26 +35,26 @@ const IconServiceFeature = {
     }
   },
 
-  renderAuthGate: function (container, config) {
+  renderGate: function (container, config) {
     container.html(`
         <section class="section-padding hni-section" style="min-height: 80vh; display: flex; align-items: center;">
             <div class="container text-center">
                 <span class="section-subtitle">Invitation Only</span>
                 <h2 class="section-title">Exclusive Access</h2>
                 <p>${config.ICON_AUTH_TEXT || "Please enter your registered email to unlock."}</p>
-                <form id="auth-gate-form" class="subscribe-form" style="max-width: 400px; margin: 40px auto;">
-                    <input type="email" id="auth-email" placeholder="Email Address" required style="border-color: var(--white); color: var(--white);">
+                <form id="icon-gate-form" class="subscribe-form" style="max-width: 400px; margin: 40px auto;">
+                    <input type="email" id="icon-gate-email" placeholder="Email Address" required style="border-color: var(--white); color: var(--white);">
                     <button type="submit" class="btn" style="border-color: var(--white); color: var(--white); width: 100%;">Unlock Collection</button>
-                    <p id="auth-error" style="color: #ff6b6b; margin-top: 20px; display: none;"></p>
+                    <p id="icon-gate-error" style="color: #ff6b6b; margin-top: 20px; display: none;"></p>
                 </form>
             </div>
         </section>
     `);
 
-    $("#auth-gate-form").on("submit", async (e) => {
+    $("#icon-gate-form").on("submit", async (e) => {
         e.preventDefault();
-        const email = $("#auth-email").val().toLowerCase().trim();
-        const errorEl = $("#auth-error");
+        const email = $("#icon-gate-email").val().toLowerCase().trim();
+        const errorEl = $("#icon-gate-error");
         
         errorEl.hide();
         
@@ -90,7 +90,7 @@ const IconServiceFeature = {
                 }, 2000);
             }
         } catch (error) {
-            console.error("Auth error:", error);
+            console.error("Access error:", error);
             errorEl.text("System error. Please try again later.").fadeIn();
         }
     });
