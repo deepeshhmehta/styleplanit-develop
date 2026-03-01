@@ -708,14 +708,15 @@ footer {
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
     background: var(--black); /* Fallback */
+    /* Use clip-path to create a "window" for the fixed background pseudo-element */
+    clip-path: inset(0);
 }
 
-/* iOS-safe parallax-style background */
+/* iOS-safe fixed background effect */
 .hni-section::before {
     content: '';
-    position: absolute;
+    position: fixed; /* Fixed to viewport */
     top: 0;
     left: 0;
     width: 100%;
@@ -723,15 +724,9 @@ footer {
     background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('../assets/images/services-by-category/Elevate/Icon\ service.png');
     background-size: cover;
     background-position: center;
-    background-attachment: scroll;
     z-index: 0;
-}
-
-/* Desktop-only fixed attachment for better performance */
-@media (min-width: 1024px) {
-    .hni-section::before {
-        background-attachment: fixed;
-    }
+    will-change: transform; /* Optimize performance */
+    pointer-events: none;
 }
 
 .hni-section .container {
