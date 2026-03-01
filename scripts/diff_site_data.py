@@ -8,7 +8,7 @@ from collections import OrderedDict
 
 """
 📊 STYLEPLANIT INTERACTIVE DIFF ENGINE
-Optimized: Only prompts for action when data actually diverges.
+Optimized: Summarizes changes upfront and allows bulk resolution.
 """
 
 # Configuration
@@ -71,13 +71,11 @@ def main():
         "team": {"key_fields": ["name"]}
     }
 
-    final_csv_data = {}
-    to_delete_from_sheets = []
-    changes_to_local = False
+    all_discrepancies = []
+    category_data = {}
 
+    print("📡 Fetching remote data...")
     for category, settings in categories_to_check.items():
-        print(f"📂 CATEGORY: {category.upper()}")
-        
         csv_text = data_utils.fetch_csv(SPREADSHEET_ID, GIDS[category])
         if csv_text is None:
             print(f"  ❌ Failed to fetch remote data for '{category}'. Skipping.")
@@ -105,48 +103,109 @@ def main():
         for k in remote_map.keys():
             if k not in all_keys: all_keys.append(k)
 
-        local_category_updated = []
-        category_needs_sheets_update = False
-
+        category_discrepancies = []
         for ckey in all_keys:
             local_item = local_map.get(ckey)
             remote_item = remote_map.get(ckey)
             
+            state = None
+            diffs = {}
             if local_item and remote_item:
                 diffs = {h: (local_item[h], remote_item[h]) for h in headers if local_item[h] != remote_item[h]}
-                if not diffs:
-                    local_category_updated.append(local_item)
-                    continue
-                state = "MISMATCH"
+                if diffs: state = "MISMATCH"
             elif local_item:
                 state = "LOCAL_ONLY"
             else:
                 state = "SHEETS_ONLY"
 
-            print(f"\n🔍 ENTRY: {get_key_string(local_item or remote_item, key_fields)}")
-            print(f"   Status: {state}")
-            if state == "MISMATCH":
-                for field, (lv, rv) in diffs.items():
-                    print(f"     [{field}]: Local: '{lv}' | Sheets: '{rv}'")
+            if state:
+                category_discrepancies.append({
+                    "ckey": ckey,
+                    "state": state,
+                    "diffs": diffs,
+                    "local": local_item,
+                    "remote": remote_item,
+                    "key_str": get_key_string(local_item or remote_item, key_fields)
+                })
+        
+        category_data[category] = {
+            "discrepancies": category_discrepancies,
+            "headers": headers,
+            "key_fields": key_fields,
+            "local_map": local_map,
+            "remote_map": remote_map,
+            "all_keys": all_keys
+        }
+        if category_discrepancies:
+            all_discrepancies.extend([(category, d) for d in category_discrepancies])
 
-            print("\n   1. [Winner: Local]  2. [Winner: Sheets]  3. [Manual]  s. [Skip]")
-            choice = input("   Select: ").strip().lower()
+    if not all_discrepancies:
+        print("\n🙌 EVERYTHING IN SYNC. No actions required.")
+        return
+
+    print(f"\n🔍 FOUND {len(all_discrepancies)} DISCREPANCIES:")
+    for category, d in all_discrepancies:
+        print(f"  [{category.upper()}] {d['state']}: {d['key_str']}")
+
+    print("\nHow would you like to resolve these?")
+    print("  1. [Winner: All Local] - Keep local data, generate CSVs for Sheets update.")
+    print("  2. [Winner: All Sheets] - Take all data from Google Sheets.")
+    print("  3. [Individual Loop]   - Decide for each item (default).")
+    
+    global_choice = input("\nSelect (1/2/3): ").strip()
+
+    final_csv_data = {}
+    to_delete_from_sheets = []
+    changes_to_local = False
+
+    for category, data in category_data.items():
+        local_category_updated = []
+        category_needs_sheets_update = False
+        
+        headers = data["headers"]
+        key_fields = data["key_fields"]
+        
+        # If no discrepancies, just keep local
+        if not data["discrepancies"]:
+            updated_local_data[category] = local_full_data.get(category, [])
+            continue
+
+        for ckey in data["all_keys"]:
+            local_item = data["local_map"].get(ckey)
+            remote_item = data["remote_map"].get(ckey)
+            
+            # Find if this specific key has a discrepancy
+            d = next((item for item in data["discrepancies"] if item["ckey"] == ckey), None)
+            
+            if not d:
+                if local_item: local_category_updated.append(local_item)
+                continue
+
+            choice = global_choice
+            if global_choice not in ["1", "2"]:
+                print(f"\n🔍 [{category.upper()}] ENTRY: {d['key_str']}")
+                print(f"   Status: {d['state']}")
+                if d['state'] == "MISMATCH":
+                    for field, (lv, rv) in d['diffs'].items():
+                        print(f"     [{field}]: Local: '{lv}' | Sheets: '{rv}'")
+                print("\n   1. [Winner: Local]  2. [Winner: Sheets]  3. [Manual]  s. [Skip]")
+                choice = input("   Select: ").strip().lower()
 
             if choice == "1": # Local Wins
-                if state == "SHEETS_ONLY":
-                    print("   ✅ Mark for Sheets deletion.")
-                    to_delete_from_sheets.append(f"{category} | {get_key_string(remote_item, key_fields)}")
+                if d['state'] == "SHEETS_ONLY":
+                    print(f"   ✅ {d['key_str']} -> Mark for Sheets deletion.")
+                    to_delete_from_sheets.append(f"{category} | {d['key_str']}")
                 else:
-                    print("   ✅ Local kept. Queuing Sheets update.")
+                    if global_choice != "1": print(f"   ✅ {d['key_str']} -> Local kept. Queuing Sheets update.")
                     local_category_updated.append(local_item)
                     category_needs_sheets_update = True
             
             elif choice == "2": # Sheets Wins
-                if state == "LOCAL_ONLY":
-                    print("   ✅ Deleted from Local.")
+                if d['state'] == "LOCAL_ONLY":
+                    if global_choice != "2": print(f"   ✅ {d['key_str']} -> Deleted from Local.")
                     changes_to_local = True
                 else:
-                    print("   ✅ Sheets value taken.")
+                    if global_choice != "2": print(f"   ✅ {d['key_str']} -> Sheets value taken.")
                     local_category_updated.append(remote_item)
                     changes_to_local = True
             
@@ -165,10 +224,8 @@ def main():
         
         if category_needs_sheets_update:
             output = io.StringIO()
-            # Manual join with ~~ to handle commas in text
             output.write("~~".join(headers) + "\n")
             for row in local_category_updated:
-                # Use string conversion and replace newlines with literal \n to maintain sheet structure
                 line = "~~".join(str(row.get(h, "")).replace("\n", "\\n") for h in headers)
                 output.write(line + "\n")
             final_csv_data[category] = output.getvalue()
@@ -177,29 +234,26 @@ def main():
     print("🏁 SYNC SUMMARY")
     print("="*60)
 
-    if not changes_to_local and not final_csv_data and not to_delete_from_sheets:
-        print("🙌 EVERYTHING IN SYNC. No actions required.")
-    else:
-        if to_delete_from_sheets:
-            print("\n🗑️  KEYS TO MANUALLY DELETE FROM SHEETS:")
-            for item in to_delete_from_sheets:
-                print(f"   ❌ {item}")
+    if to_delete_from_sheets:
+        print("\n🗑️  KEYS TO MANUALLY DELETE FROM SHEETS:")
+        for item in to_delete_from_sheets:
+            print(f"   ❌ {item}")
 
-        if final_csv_data:
-            print("\n📁 UPDATED CSVS GENERATED (in scripts/diff_outputs/):")
-            for cat, content in final_csv_data.items():
-                out_file = os.path.join(OUTPUT_DIR, f"{cat}_to_paste_in_sheets.csv")
-                with open(out_file, "w") as f:
-                    f.write(content)
-                print(f"  ✅ {os.path.basename(out_file)}")
-        
-        if changes_to_local:
-            if input("\n💾 Save updates to site-data.json? (y/n): ").strip().lower() == 'y':
-                with open(JSON_PATH, "w") as f:
-                    json.dump(updated_local_data, f, indent=2, ensure_ascii=False)
-                print("✅ Local site-data.json updated.")
-        else:
-            print("\nℹ️ No local site-data.json changes to save.")
+    if final_csv_data:
+        print("\n📁 UPDATED CSVS GENERATED (in scripts/diff_outputs/):")
+        for cat, content in final_csv_data.items():
+            out_file = os.path.join(OUTPUT_DIR, f"{cat}_to_paste_in_sheets.csv")
+            with open(out_file, "w") as f:
+                f.write(content)
+            print(f"  ✅ {os.path.basename(out_file)}")
+    
+    if changes_to_local:
+        if input("\n💾 Save updates to site-data.json? (y/n): ").strip().lower() == 'y':
+            with open(JSON_PATH, "w") as f:
+                json.dump(updated_local_data, f, indent=2, ensure_ascii=False)
+            print("✅ Local site-data.json updated.")
+    else:
+        print("\nℹ️ No local site-data.json changes to save.")
 
     print("\n✨ Sync Complete!")
 
