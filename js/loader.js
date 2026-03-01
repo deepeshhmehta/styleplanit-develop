@@ -90,7 +90,7 @@ async function loadComponents() {
     if ($("#reviews-container").length > 0) features.push('reviews');
     if ($("#team-container").length > 0) features.push('team');
     if ($("#subscribe-container").length > 0 || $(".subscribe-form").length > 0) features.push('subscribe');
-    if ($("#icon-service-container").length > 0) features.push('auth');
+    if ($("#icon-service-container").length > 0) features.push('icon-service');
     features.push('dialogs'); 
 
     const featurePromises = features.map((feature) => {

@@ -60,8 +60,8 @@ const App = {
     }
 
     // 5. Icon Service collection (Auth-gated)
-    if (typeof AuthFeature !== 'undefined') {
-        AuthFeature.init();
+    if (typeof IconServiceFeature !== 'undefined') {
+        IconServiceFeature.init();
     }
 
     // 6. Subscription logic
