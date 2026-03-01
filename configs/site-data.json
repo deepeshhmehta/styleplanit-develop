@@ -60,11 +60,15 @@
     },
     {
       "key": "ICON_BUTTON_HREF",
-      "value": "https://cal.com/styleplanit/the-icon-service"
+      "value": "icon-service"
     },
     {
       "key": "ICON_BUTTON_TEXT",
-      "value": "Request Access"
+      "value": "Secret Access"
+    },
+    {
+      "key": "ICON_CAL_HREF",
+      "value": "https://cal.com/styleplanit/the-icon-service"
     },
     {
       "key": "ICON_SUBTITLE",
@@ -148,11 +152,11 @@
     },
     {
       "key": "NAV_LINK_4_HREF",
-      "value": "/#be-an-icon"
+      "value": "icon-service"
     },
     {
       "key": "NAV_LINK_4_TEXT",
-      "value": "Be an ICON"
+      "value": "Icon Service"
     },
     {
       "key": "NAV_LINK_TEAM_HREF",

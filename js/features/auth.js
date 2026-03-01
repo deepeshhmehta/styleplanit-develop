@@ -41,12 +41,11 @@ const AuthFeature = {
             <div class="container text-center">
                 <span class="section-subtitle">Invitation Only</span>
                 <h2 class="section-title">Exclusive Access</h2>
-                <p>Please enter your credentials to view the Icon Collection.</p>
+                <p>Please enter your registered email to unlock the Icon Collection.</p>
                 <form id="auth-gate-form" class="subscribe-form" style="max-width: 400px; margin: 40px auto;">
                     <input type="email" id="auth-email" placeholder="Email Address" required style="border-color: var(--white); color: var(--white);">
-                    <input type="text" id="auth-otp" placeholder="Access Code" required style="border-color: var(--white); color: var(--white);">
                     <button type="submit" class="btn" style="border-color: var(--white); color: var(--white); width: 100%;">Unlock Collection</button>
-                    <p id="auth-error" style="color: #ff6b6b; margin-top: 20px; display: none;">Invalid email or access code.</p>
+                    <p id="auth-error" style="color: #ff6b6b; margin-top: 20px; display: none;"></p>
                 </form>
             </div>
         </section>
@@ -55,7 +54,9 @@ const AuthFeature = {
     $("#auth-gate-form").on("submit", async (e) => {
         e.preventDefault();
         const email = $("#auth-email").val().toLowerCase().trim();
-        const otp = $("#auth-otp").val().trim();
+        const errorEl = $("#auth-error");
+        
+        errorEl.hide();
         
         try {
             const spreadsheetId = config.ACCESS_SPREADSHEET_ID;
@@ -74,17 +75,22 @@ const AuthFeature = {
             const csvText = await response.text();
             const accessList = Utils.parseCSV(csvText);
             
-            const user = accessList.find(u => u.email.toLowerCase().trim() === email && u.otp === otp);
+            // Check only for email validity
+            const user = accessList.find(u => u.email && u.email.toLowerCase().trim() === email);
 
             if (user) {
                 sessionStorage.setItem("icon_service_auth", "true");
                 this.init();
             } else {
-                $("#auth-error").text("Invalid email or access code.").fadeIn();
+                // If user is not in list, show message and redirect to cal.com
+                errorEl.text("Access denied. Redirecting to request access...").fadeIn();
+                setTimeout(() => {
+                    window.location.href = config.ICON_CAL_HREF || "https://cal.com/styleplanit/the-icon-service";
+                }, 2000);
             }
         } catch (error) {
             console.error("Auth error:", error);
-            $("#auth-error").text("System error. Please try again later.").fadeIn();
+            errorEl.text("System error. Please try again later.").fadeIn();
         }
     });
   }
