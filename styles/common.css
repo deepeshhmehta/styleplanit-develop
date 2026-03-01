@@ -1,6 +1,11 @@
 /* --- 1. LUXURY RESET & THEME --- */
 @import url('variables.css');
 
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 120px;
+}
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 img {
