@@ -968,20 +968,25 @@ footer {
 .elegant-tabs li {
     padding: 15px 0;
     cursor: pointer;
-    font-size: 0.8rem;
+    font-size: 0.9rem;
+    font-weight: 500;
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 3px;
     position: relative;
     color: var(--grey);
+    transition: color 0.3s ease;
 }
 
-.elegant-tabs li.active { color: var(--black); }
+.elegant-tabs li.active { 
+    color: var(--primary-accent);
+    font-weight: 600;
+}
 
 .elegant-tabs li::after {
     content: '';
     position: absolute;
     width: 0;
-    height: 2px;
+    height: 3px;
     bottom: -1px;
     left: 50%;
     transform: translateX(-50%);
