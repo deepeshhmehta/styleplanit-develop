@@ -1,0 +1,20 @@
+name: Sync to Staging Repo
+
+on:
+  push:
+    branches:
+      - staging
+
+jobs:
+  sync-to-staging:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to Staging Repository
+        run: |
+          git remote add staging https://x-access-token:${{ secrets.STAGING_SYNC_TOKEN }}@github.com/deepeshhmehta/styleplanit-staging.git
+          git push staging staging:main --force
