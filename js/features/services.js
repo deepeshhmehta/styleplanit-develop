@@ -187,16 +187,6 @@ const ServicesFeature = {
             $(".service-card").removeClass("active");
         });
     });
-
-    // Smooth scroll for jump links
-    $(document).on("click", ".menu-jump-links a", function(e) {
-        e.preventDefault();
-        const targetId = $(this).attr("href");
-        const navHeight = $("nav").outerHeight() || 0;
-        $('html, body').animate({
-            scrollTop: $(targetId).offset().top - navHeight - 20
-        }, 600);
-    });
   },
 
   slugify: function(text) {
