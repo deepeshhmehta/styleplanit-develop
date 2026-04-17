@@ -1350,6 +1350,8 @@ footer {
     display: flex;
     justify-content: flex-end;
     margin-bottom: 20px;
+    position: relative;
+    z-index: var(--z-overlay);
 }
 
 .reader-btn {
