@@ -26,17 +26,16 @@ const ServicesFeature = {
     }
 
     if (options.autoExpand && this.allServices.length > 0) {
-        this.renderServicesGrid(this.allServices);
-        $(".service-content").hide(); // Hide grid if auto-expanding
+        this.renderGroupedServices(this.allServices);
         this.showServiceDetails(this.allServices[0].title);
     } else {
-        this.renderServicesGrid(this.allServices);
+        this.renderGroupedServices(this.allServices);
     }
     
     this.bindEvents();
   },
 
-  renderServicesGrid: function (services) {
+  renderGroupedServices: function (services) {
     const container = $(".service-content");
     if (container.length === 0) return;
 
@@ -108,7 +107,6 @@ const ServicesFeature = {
 
     const serviceSlug = this.slugify(service.title);
     const detailsContainer = $("#service-details-container");
-    const gridContainer = $(".service-content");
     
     const inclusionsTitle = (Data.masterData.config.find(c => c.key === 'SERVICE_INCLUSIONS_TITLE') || {value: "What's Included?"}).value;
     const inquireText = (Data.masterData.config.find(c => c.key === 'STEP_2_BUTTON_TEXT') || {value: "Inquire Now"}).value;
@@ -117,11 +115,13 @@ const ServicesFeature = {
 
     const inclusionsHtml = this.renderInclusionsList(service.footer);
 
-    // Fade out grid, then show details
-    gridContainer.fadeOut(300, function() {
-        detailsContainer.html(`
-            <div class="active-service-details">
-                <div class="details-content-inner">
+    detailsContainer.html(`
+        <div class="active-service-details">
+            <div class="details-grid">
+                <div class="details-brand-pillar">
+                    <span class="brand-mark">SP</span>
+                </div>
+                <div class="details-text">
                     <span class="section-subtitle">${service.category}</span>
                     <h3>${service.title}</h3>
                     <p class="long-desc">${service.long_description}</p>
@@ -152,14 +152,13 @@ const ServicesFeature = {
                     </div>
                 </div>
             </div>
-        `).fadeIn(400);
+        </div>
+    `).fadeIn(400);
 
-        // Scroll so the opened card content is at the top
-        const navHeight = $("nav").outerHeight() || 0;
-        $("html, body").animate({
-            scrollTop: detailsContainer.offset().top - navHeight
-        }, 400);
-    });
+    const navHeight = $("nav").outerHeight() || 0;
+    $("html, body").animate({
+        scrollTop: detailsContainer.offset().top - navHeight - 40
+    }, 600);
   },
 
   bindEvents: function () {
@@ -176,19 +175,16 @@ const ServicesFeature = {
     });
 
     $(document).on("click", ".btn-close-details", function() {
-        const gridContainer = $(".service-content");
-        const detailsContainer = $("#service-details-container");
+        const navHeight = $("nav").outerHeight() || 0;
+        const target = $("#services");
         
-        detailsContainer.fadeOut(300, function() {
+        $('html, body').animate({
+            scrollTop: target.offset().top - navHeight
+        }, 500);
+
+        $("#service-details-container").fadeOut(300, function() {
             $(this).empty();
             $(".service-card").removeClass("active");
-            gridContainer.fadeIn(400);
-
-            // Scroll back to top of services section
-            const navHeight = $("nav").outerHeight() || 0;
-            $('html, body').animate({
-                scrollTop: $("#services").offset().top - navHeight
-            }, 400);
         });
     });
   },
