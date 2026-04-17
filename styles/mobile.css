@@ -79,6 +79,11 @@
         display: none !important; /* Hide pills on mobile to save space */
     }
 
+    .dribbble-cta-btn {
+        padding: 12px 30px;
+        font-size: 0.85rem;
+    }
+
     /* How It Works Mobile Layout */
     .customer-layers { grid-template-columns: 1fr; gap: 20px; }
     .booking-steps h3 { font-size: 1.8rem; }
@@ -173,8 +178,11 @@
     .value-text-box .lead-text {
         font-size: 1.1rem;
     }
+    .pillar {
+        padding-left: 0;
+    }
     .pillar-num {
-        font-size: 1.4rem;
+        display: none;
     }
     .value-footer {
         margin-top: 40px;
