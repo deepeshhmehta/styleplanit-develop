@@ -144,7 +144,20 @@
         /* Keep in place, just let common.css handle the highlight border */
     }
 
-    .service-details-container { padding: 30px 20px; }
+    .service-details-container { 
+        padding: 0; 
+        max-width: 100%;
+        margin: 20px 0;
+        border-radius: var(--standard-radius);
+    }
+    
+    .active-service-details {
+        padding: 40px 25px;
+    }
+
+    .active-service-details h3 {
+        font-size: 1.8rem;
+    }
 
     /* Team Page Mobile Layout */
     .profile-card, .profile-card.image-right {

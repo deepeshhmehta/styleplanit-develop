@@ -1597,86 +1597,41 @@ footer {
 }
 
 .service-details-container {
-    margin-top: 60px;
-    margin-bottom: 60px;
-    background: var(--white);
+    margin: 40px auto 60px;
+    background: var(--logo-band-bg);
     border: 1px solid var(--border-color);
     width: 100%;
+    max-width: 600px; /* Vertical card look on desktop */
     border-radius: var(--standard-radius);
     overflow: hidden;
 }
 
 .active-service-details {
     padding: 60px;
+    text-align: center;
 }
 
-.active-service-details .details-grid {
-    display: grid;
-    grid-template-columns: 1fr 1.5fr;
-    gap: 60px;
-    align-items: center;
-}
-
-.active-service-details .details-brand-pillar {
-    background: var(--primary-accent);
+.details-content-inner {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-    height: 500px;
-    width: 100%;
-    position: relative;
-    overflow: hidden;
 }
 
-/* Tablet & Mobile: Stack Pillar on Top */
-@media (max-width: 1366px) {
-    .active-service-details .details-grid {
-        grid-template-columns: 1fr;
-        gap: 30px;
-    }
-    .active-service-details .details-brand-pillar {
-        height: 200px !important; /* Forces rectangular on iPad/Phone */
-    }
-    .active-service-details .brand-mark {
-        font-size: 8rem;
-    }
-}
-
-@media (max-width: 768px) {
-    .bio { text-align: left; }
-}
-@media (max-width: 768px) {
-    .active-service-details .details-brand-pillar {
-        height: 100px !important;
-    }
-    .active-service-details .brand-mark {
-        font-size: 4rem !important;
-    }
-}
-
-.active-service-details .brand-mark {
-    font-family: var(--font-primary);
-    font-size: 15rem;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.05);
-    user-select: none;
-    pointer-events: none;
-}
-
-.active-service-details .details-text h3 {
+.active-service-details h3 {
     font-size: 2.5rem;
     margin-bottom: 20px;
 }
 
-.active-service-details .details-text .long-desc {
+.active-service-details .long-desc {
     font-size: 1.1rem;
     line-height: 1.8;
     margin-bottom: 30px;
     color: var(--charcoal);
 }
 
-.active-service-details .details-text .service-chips {
-    justify-content: flex-start;
+.service-inclusions-content {
+    width: 100%;
+    text-align: left;
     margin-bottom: 40px;
 }
 
