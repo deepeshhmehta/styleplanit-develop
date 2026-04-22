@@ -41,7 +41,7 @@ const HomeServicesFeature = {
                                 <a href="${category.booking_link || '#'}" class="btn btn-primary-accent">Schedule a call</a>
                             </div>
                             <div class="details-right">
-                                <div class="package-label" style="color: var(--primary-accent)">What's included</div>
+                                <div class="package-label">What's included</div>
                                 <ul class="inclusions-list">
                                     ${inclusionsHtml}
                                 </ul>
@@ -70,12 +70,22 @@ const HomeServicesFeature = {
         const indicator = $("#packages-scroll-indicator");
         const resetButton = $("#btn-packages-reset");
 
-        // 1. Card Click - Expand
+        // 1. Card Click - Expand or Contract
         $(document).on("click", ".package-card", function(e) {
-            if ($(this).hasClass("active") || $(e.target).closest('.package-details-expanded').length > 0) return;
+            // If clicking inside the details (like the button), do nothing special
+            if ($(e.target).closest('.package-details-expanded').length > 0) return;
+
+            // If already active, contract it (same as reset)
+            if ($(this).hasClass("active")) {
+                $("#btn-packages-reset").trigger("click");
+                return;
+            }
 
             const tier = $(this).data("tier");
+            const packageName = $(this).find("h3").text();
             
+            Analytics.trackInteraction('package_expand', packageName);
+
             $(".package-card").removeClass("active");
             $(this).addClass("active");
             grid.addClass("has-active").attr("data-state", "active");
@@ -94,11 +104,21 @@ const HomeServicesFeature = {
 
         // 2. Reset Button
         $(document).on("click", "#btn-packages-reset", function() {
+            Analytics.trackInteraction('package_reset', 'return_to_grid');
             $(".package-card").removeClass("active");
             grid.removeClass("has-active").removeAttr("data-state");
             $(".packages-section").removeClass("has-active");
             resetButton.fadeOut();
             if (window.innerWidth < 992) indicator.show(); // Show dots back on mobile
+        });
+
+        // 2b. Bespoke Menu CTAs
+        $(document).on("click", ".discovery-callout .btn-primary-accent", function() {
+            Analytics.trackLead('bespoke_discovery_call', 'home_callout');
+        });
+
+        $(document).on("click", ".discovery-callout .btn-secondary", function() {
+            Analytics.trackInteraction('bespoke_menu_view', 'home_callout_link');
         });
 
         // 3. Scroll Tracking for Dots

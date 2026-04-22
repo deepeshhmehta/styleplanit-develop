@@ -15,6 +15,9 @@ const App = {
     });
 
     $(document).on("click", ".nav-links a", function () {
+      const linkText = $(this).text().trim();
+      Analytics.trackInteraction('nav_click', linkText);
+
       $(".nav-links").removeClass("active");
       $(".menu-toggle").attr("aria-expanded", "false");
     });
@@ -98,7 +101,7 @@ const App = {
             if (target.length) {
                 const navHeight = $("nav").outerHeight() || 0;
                 $('html, body').animate({
-                    scrollTop: target.offset().top - navHeight
+                    scrollTop: target.offset().top - (navHeight - 100) // Negative 100px deeper scroll
                 }, 800);
             }
         }, 500); // Give dynamic grids time to paint

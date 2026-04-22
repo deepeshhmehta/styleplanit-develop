@@ -15,7 +15,7 @@ This document provides the high-level project summary and critical safety mandat
 
 *   **Aesthetic:** "Luxury Minimalist," "Modern Dribbble," "Editorial Layout."
 *   **Design Token:** Standard Border Radius (`40px`).
-*   **Typography:** 'Bebas Neue' (Headings), 'DM Sans' (Body).
+*   **Typography:** 'Cormorant Garamond' (Headings/Display), 'DM Sans' (Body/Labels).
 *   **Routing:** Extensionless URLs. All navigation links default to homepage anchors (e.g., `/#services`).
 
 ## 3. Safety & Governance
@@ -23,10 +23,9 @@ This document provides the high-level project summary and critical safety mandat
 *   **CRITICAL: UNLESS EXPLICITLY INSTRUCTED TO PUSH, NEVER PUSH CODE.**
 *   **Branching Strategy:**
     *   `main`: Production (Locked).
-    *   `staging`: Pre-release testing.
-    *   `develop`: Integration branch.
-    *   `feature/*`: Active development.
+    *   `staging`: Pre-release testing (`https://staging.styleplanit.com`).
+    *   `develop`: Integration branch (`https://develop.styleplanit.com`).
 *   **Verification:** Mandatory `test.sh` run before PR creation.
 
-## 4. Current State (v5.0.0)
-The site has undergone a major refactor. The "Service Grid" has been replaced by a "Package Bundle" model. The site is now an **Authority Platform** with a focus on value-based storytelling and persona recognition. 
+## 4. Current State (v1.0.0)
+The platform has officially reached its first **Production Baseline (v1.0.0)**. The site is a fully data-driven **Authority Platform** utilizing a split-atom configuration model and modular component architecture.

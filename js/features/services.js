@@ -26,64 +26,43 @@ const ServicesFeature = {
     }
 
     if (options.autoExpand && this.allServices.length > 0) {
-        this.renderGroupedServices(this.allServices);
+        this.renderServicesGrid(this.allServices);
+        $(".service-content").hide(); // Hide grid if auto-expanding
         this.showServiceDetails(this.allServices[0].title);
     } else {
-        this.renderGroupedServices(this.allServices);
+        this.renderServicesGrid(this.allServices);
     }
     
     this.bindEvents();
   },
 
-  renderGroupedServices: function (services) {
+  renderServicesGrid: function (services) {
     const container = $(".service-content");
     if (container.length === 0) return;
 
     container.empty();
 
-    // 1. Group services by category
-    const groups = {};
-    services.forEach(s => {
-        if (!groups[s.category]) groups[s.category] = [];
-        groups[s.category].push(s);
-    });
+    // Render everything in one grid without category headers or jump links
+    const grid = $('<div class="services-grid active" style="display: grid; margin-bottom: 60px;"></div>');
 
-    // 2. Add Jump-links
-    const jumpLinks = $('<div class="menu-jump-links"></div>');
-    Object.keys(groups).forEach(cat => {
-        jumpLinks.append(`<a href="#cat-${this.slugify(cat)}" class="btn-secondary">${cat}</a>`);
-    });
-    container.append(jumpLinks);
-
-    // 3. Render Sections
-    Object.keys(groups).forEach(cat => {
-        const sectionId = `cat-${this.slugify(cat)}`;
-        const section = $(`
-            <div class="menu-section" id="${sectionId}">
-                <h2 class="menu-section-title">${cat}</h2>
-                <div class="services-grid active" style="display: grid; margin-bottom: 60px;"></div>
+    services.forEach((service) => {
+        const chipsHtml = this.renderServiceChips(service.footer);
+        const serviceSlug = this.slugify(service.title);
+        grid.append(`
+            <div class="service-card" data-title="${service.title}" data-ga-service="${serviceSlug}">
+                <div class="service-card-image">
+                    <img src="${service.image_url}" alt="${service.title}">
+                </div>
+                <div class="service-card-content">
+                    <h3>${service.title}</h3>
+                    <p class="short-desc">${service.short_description}</p>
+                    <div class="service-chips">${chipsHtml}</div>
+                </div>
             </div>
         `);
-        
-        const grid = section.find(".services-grid");
-        groups[cat].forEach(service => {
-            const chipsHtml = this.renderServiceChips(service.footer);
-            const serviceSlug = this.slugify(service.title);
-            grid.append(`
-                <div class="service-card" data-title="${service.title}" data-ga-service="${serviceSlug}">
-                    <div class="service-card-image">
-                        <img src="${service.image_url}" alt="${service.title}">
-                    </div>
-                    <div class="service-card-content">
-                        <h3>${service.title}</h3>
-                        <p class="short-desc">${service.short_description}</p>
-                        <div class="service-chips">${chipsHtml}</div>
-                    </div>
-                </div>
-            `);
-        });
-        container.append(section);
     });
+    
+    container.append(grid);
   },
 
   renderServiceChips: function (footerText) {
@@ -129,21 +108,20 @@ const ServicesFeature = {
 
     const serviceSlug = this.slugify(service.title);
     const detailsContainer = $("#service-details-container");
+    const gridContainer = $(".service-content");
     
-    const inclusionsTitle = (Data.masterData.config.find(c => c.key === 'SERVICE_INCLUSIONS_TITLE') || {value: "What's Included?"}).value;
-    const inquireText = (Data.masterData.config.find(c => c.key === 'STEP_2_BUTTON_TEXT') || {value: "Inquire Now"}).value;
-    const closeBtnText = (Data.masterData.config.find(c => c.key === 'EXPERIENCE_CLOSE_BTN') || {value: "Close"}).value;
-    const taxesNote = (Data.masterData.config.find(c => c.key === 'PRICE_TAXES_TEXT') || {value: "+ taxes"}).value;
+    const inclusionsTitle = Data.getConfig('SERVICE_INCLUSIONS_TITLE') || "What's Included?";
+    const inquireText = Data.getConfig('STEP_2_BUTTON_TEXT') || "Inquire Now";
+    const closeBtnText = Data.getConfig('EXPERIENCE_CLOSE_BTN') || "Close";
+    const taxesNote = Data.getConfig('PRICE_TAXES_TEXT') || "+ taxes";
 
     const inclusionsHtml = this.renderInclusionsList(service.footer);
 
-    detailsContainer.html(`
-        <div class="active-service-details">
-            <div class="details-grid">
-                <div class="details-brand-pillar">
-                    <span class="brand-mark">SP</span>
-                </div>
-                <div class="details-text">
+    // Fade out grid, then show details
+    gridContainer.fadeOut(300, function() {
+        detailsContainer.html(`
+            <div class="active-service-details">
+                <div class="details-content-inner">
                     <span class="section-subtitle">${service.category}</span>
                     <h3>${service.title}</h3>
                     <p class="long-desc">${service.long_description}</p>
@@ -164,7 +142,7 @@ const ServicesFeature = {
                     
                     <div class="details-footer">
                         <div class="cta-row">
-                            <a href="${(Data.masterData.config.find(c => c.key === 'STEP_2_BUTTON_HREF') || {}).value || 'https://cal.com/styleplanit/15min'}" 
+                            <a href="${Data.getConfig('STEP_2_BUTTON_HREF') || 'https://cal.com/styleplanit/15min'}" 
                                target="_blank" 
                                rel="noopener noreferrer"
                                class="btn btn-primary-accent btn-ga-inquiry"
@@ -174,13 +152,14 @@ const ServicesFeature = {
                     </div>
                 </div>
             </div>
-        </div>
-    `).fadeIn(400);
+        `).fadeIn(400);
 
-    const navHeight = $("nav").outerHeight() || 0;
-    $("html, body").animate({
-        scrollTop: detailsContainer.offset().top - navHeight - 40
-    }, 600);
+        // Scroll so the opened card content is at the top
+        const navHeight = $("nav").outerHeight() || 0;
+        $("html, body").animate({
+            scrollTop: detailsContainer.offset().top - navHeight
+        }, 400);
+    });
   },
 
   bindEvents: function () {
@@ -193,31 +172,30 @@ const ServicesFeature = {
         $(this).addClass("active");
         
         const title = $(this).data("title");
+        Analytics.trackInteraction('service_card_click', title);
         self.showServiceDetails(title);
     });
 
-    $(document).on("click", ".btn-close-details", function() {
-        const navHeight = $("nav").outerHeight() || 0;
-        const target = $("#services");
-        
-        $('html, body').animate({
-            scrollTop: target.offset().top - navHeight
-        }, 500);
-
-        $("#service-details-container").fadeOut(300, function() {
-            $(this).empty();
-            $(".service-card").removeClass("active");
-        });
+    $(document).on("click", ".btn-ga-inquiry", function() {
+        const serviceName = $(this).closest(".active-service-details").find("h3").text();
+        Analytics.trackLead('bespoke_service_inquiry', serviceName);
     });
 
-    // Smooth scroll for jump links
-    $(document).on("click", ".menu-jump-links a", function(e) {
-        e.preventDefault();
-        const targetId = $(this).attr("href");
-        const navHeight = $("nav").outerHeight() || 0;
-        $('html, body').animate({
-            scrollTop: $(targetId).offset().top - navHeight - 20
-        }, 600);
+    $(document).on("click", ".btn-close-details", function() {
+        const gridContainer = $(".service-content");
+        const detailsContainer = $("#service-details-container");
+        
+        detailsContainer.fadeOut(300, function() {
+            $(this).empty();
+            $(".service-card").removeClass("active");
+            gridContainer.fadeIn(400);
+
+            // Scroll back to top of services section
+            const navHeight = $("nav").outerHeight() || 0;
+            $('html, body').animate({
+                scrollTop: $("#services").offset().top - navHeight
+            }, 400);
+        });
     });
   },
 

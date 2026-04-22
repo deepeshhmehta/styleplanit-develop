@@ -19,11 +19,12 @@
         position: absolute;
         top: 80px;
         right: 4vw;
+        width: 50vw; /* Half viewport width */
         background: rgba(255, 255, 255, 0.85); /* Translucent background */
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
         flex-direction: column;
-        align-items: flex-end; /* Align items to the right */
+        align-items: flex-start; /* Align items to the left */
         gap: 15px;
         padding: 25px 40px;
         border-radius: 20px;
@@ -37,7 +38,7 @@
         font-weight: 700;
         font-family: var(--font-primary);
         font-size: 1.2rem;
-        text-align: right;
+        text-align: left;
     }
 
     .nav-divider { display: none; }
@@ -59,6 +60,15 @@
 
     .hero-bg.active { opacity: 1; }
 
+    /* Trait: Compact typography to reveal more image */
+    .hero-modern .hero-content-box h1 {
+        font-size: 1.6rem;
+    }
+    .hero-modern .hero-sub-mantra {
+        font-size: 0.75rem;
+        letter-spacing: 2px;
+    }
+
     .hero-content-float { 
         padding: 0;
         max-width: none;
@@ -75,21 +85,12 @@
     .hero-sub-mantra { font-size: 0.9rem; letter-spacing: 3px; }
 
     .dribbble-pills {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 20px;
-        overflow-x: auto;
-        white-space: nowrap;
-        width: 100%;
-        padding-bottom: 10px;
-        scrollbar-width: none; /* Hide scrollbar Firefox */
+        display: none !important; /* Hide pills on mobile to save space */
     }
-    .dribbble-pills::-webkit-scrollbar {
-        display: none; /* Hide scrollbar Chrome/Safari */
-    }
-    .floating-pill {
-        flex: 0 0 auto; /* Don't shrink */
-        padding: 8px 20px;
+
+    .dribbble-cta-btn {
+        padding: 12px 30px;
+        font-size: 0.85rem;
     }
 
     /* How It Works Mobile Layout */
@@ -144,15 +145,46 @@
     }
 
     .services-grid {
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 20px;
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 15px;
+    }
+
+    .service-card {
+        padding: 15px;
+    }
+
+    .service-card .service-card-image img {
+        height: 120px;
+        margin-bottom: 10px;
+    }
+
+    .service-card h3 {
+        font-size: 1.1rem;
+        margin-bottom: 5px;
+    }
+
+    .service-card p {
+        display: none; /* Hide description in grid view on mobile */
     }
 
     .service-card.active {
         /* Keep in place, just let common.css handle the highlight border */
     }
 
-    .service-details-container { padding: 30px 20px; }
+    .service-details-container { 
+        padding: 0; 
+        max-width: 100%;
+        margin: 20px 0;
+        border-radius: var(--standard-radius);
+    }
+    
+    .active-service-details {
+        padding: 40px 25px;
+    }
+
+    .active-service-details h3 {
+        font-size: 1.8rem;
+    }
 
     /* Team Page Mobile Layout */
     .profile-card, .profile-card.image-right {
@@ -164,13 +196,18 @@
     }
     .profile-image { max-width: 100%; }
     .profile-image img { 
-        height: 400px; 
         width: 100%; 
+        aspect-ratio: 3 / 4;
         object-fit: cover;
         object-position: top center;
         border-radius: var(--standard-radius);
     }
     .profile-text h3 { font-size: 2.2rem; }
+    .profile-text .role {
+        letter-spacing: 1px;
+        font-size: 0.7rem;
+        margin-bottom: 15px;
+    }
 
     /* Value Section Mobile */
     .value-split {
@@ -186,8 +223,11 @@
     .value-text-box .lead-text {
         font-size: 1.1rem;
     }
+    .pillar {
+        padding-left: 0;
+    }
     .pillar-num {
-        font-size: 1.4rem;
+        display: none;
     }
     .value-footer {
         margin-top: 40px;
